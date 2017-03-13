@@ -1,7 +1,7 @@
 /**
  * Tool for enhancing noisy scanned text images
  *
- * @version $Revision: 219 $$Date:: 2016-07-24 #$
+ * @version $Revision: 242 $$Date:: 2017-03-13 #$
  * @copyright Copyright (c) 2012-present, Mauricio Villegas <mauvilsa@upv.es>
  * @link https://github.com/mauvilsa/imgtxtenh
  * @license MIT License
@@ -22,16 +22,18 @@
 
 /*** Definitions **************************************************************/
 static char tool[] = "imgtxtenh";
-static char revnum[] = "$Revision: 219 $";
-static char revdate[] = "$Date: 2016-07-24 09:39:54 +0200 (Sun, 24 Jul 2016) $";
+static char revnum[] = "$Revision: 242 $";
+static char revdate[] = "$Date: 2017-03-13 17:09:15 +0100 (Mon, 13 Mar 2017) $";
 
 //#define __NO_PIX_UNITS__
 
 char *ifn = NULL;
 char *ofn = "png:-";
-char *gb_units = "mm";
+//char *gb_units = "mm";
+char *gb_units = "pixels";
 
-double gb_winW = 10;
+//double gb_winW = 10;
+double gb_winW = 80;
 double gb_prm = 0.2;
 double gb_slp = 0.5;
 int gb_enhtype = ENH_SAUVOLA;
@@ -44,8 +46,10 @@ double gb_satu = -1;
 //double gb_seR = 0.2;
 //double gb_seR = 0;
 
-double gb_small = 0.16;
-double gb_rlsa[4] = { 0.4, 0.4, 0.4, 0.4 }; // "-|/\"
+//double gb_small = 0.16;
+//double gb_rlsa[4] = { 0.4, 0.4, 0.4, 0.4 }; // "-|/\"
+double gb_small = 6;
+double gb_rlsa[4] = { 2.4, 2.4, 2.4, 2.4 }; // "-|/\"
 
 char gb_autoprm = FALSE;
 //char gb_extmask = FALSE;
@@ -286,8 +290,8 @@ int main( int argc, char *argv[] ) {
     for( n=0; n<4; n++ )
       gb_rlsa[n] *= fact;
   }
-  else
-    logger( 0, "warning: it is discouraged to provide parameters in pixels" );
+  //else
+  //  logger( 0, "warning: it is discouraged to provide parameters in pixels" );
 
   /// Read processing mask ///
   gray **msk = NULL;
