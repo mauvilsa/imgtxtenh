@@ -4,6 +4,10 @@ set( tool_EXE imgtxtenh )
 include( FindPkgConfig )
 pkg_check_modules( MagickCore REQUIRED MagickCore>=6.8 )
 
+if( MagickCore_VERSION VERSION_GREATER 7.0.0 )
+  message( FATAL_ERROR "MagickCore 7 or newer not supported!" )
+endif()
+
 file( GLOB tool_SRC "*.c" )
 add_executable( ${tool_EXE} ${tool_SRC} )
 
