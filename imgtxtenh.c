@@ -1,7 +1,7 @@
 /**
  * Tool for enhancing noisy scanned text images
  *
- * @version $Revision: 242 $$Date:: 2017-03-13 #$
+ * @version $Revision: 248 $$Date:: 2017-12-09 #$
  * @copyright Copyright (c) 2012-present, Mauricio Villegas <mauvilsa@upv.es>
  * @link https://github.com/mauvilsa/imgtxtenh
  * @license MIT License
@@ -22,8 +22,8 @@
 
 /*** Definitions **************************************************************/
 static char tool[] = "imgtxtenh";
-static char revnum[] = "$Revision: 242 $";
-static char revdate[] = "$Date: 2017-03-13 17:09:15 +0100 (Mon, 13 Mar 2017) $";
+static char revnum[] = "$Revision: 248 $";
+static char revdate[] = "$Date: 2017-12-09 08:31:46 +0100 (Sat, 09 Dec 2017) $";
 
 //#define __NO_PIX_UNITS__
 
@@ -32,8 +32,8 @@ char *ofn = "png:-";
 //char *gb_units = "mm";
 char *gb_units = "pixels";
 
-//double gb_winW = 10;
-double gb_winW = 80;
+double gb_winW_mm = 10;
+double gb_winW_px = 80;
 double gb_prm = 0.2;
 double gb_slp = 0.5;
 int gb_enhtype = ENH_SAUVOLA;
@@ -46,10 +46,10 @@ double gb_satu = -1;
 //double gb_seR = 0.2;
 //double gb_seR = 0;
 
-//double gb_small = 0.16;
-//double gb_rlsa[4] = { 0.4, 0.4, 0.4, 0.4 }; // "-|/\"
-double gb_small = 6;
-double gb_rlsa[4] = { 2.4, 2.4, 2.4, 2.4 }; // "-|/\"
+double gb_small_mm = 0.16;
+double gb_rlsa_mm[4] = { 0.4, 0.4, 0.4, 0.4 }; // "-|/\"
+double gb_small_px = 6;
+double gb_rlsa_px[4] = { 2.4, 2.4, 2.4, 2.4 }; // "-|/\"
 
 char gb_autoprm = FALSE;
 //char gb_extmask = FALSE;
@@ -72,7 +72,7 @@ void print_usage( FILE *file ) {
   fprintf( file, " -u (mm|pixels)  Units for ALL distance parameters (def.=%s)\n", gb_units );
   fprintf( file, " -d density      Specify the image density in pixels per cm (def.=%s)\n", strbool(gb_density) );
   fprintf( file, " -t type:string  Local enhancement type: sauvola, sauvolaSdMax, wilson (def.=sauvola)\n" );
-  fprintf( file, " -w width:float  Window width for local enhancement (def.=%g%s)\n", gb_winW, gb_units );
+  fprintf( file, " -w width:float  Window width for local enhancement (def.=%gpx|%gmm)\n", gb_winW_px, gb_winW_mm );
   fprintf( file, " -k mfct:float   Local enhancement mean threshold factor (def.=%g)\n", gb_prm );
   //fprintf( file, " -K subs,thr     Automatically select mfct, use -K - for default %d,%g (def.=%s)\n", gb_autosubsamp, gb_prmthr, strbool(gb_autoprm) );
   fprintf( file, " -s sfct:float   Local enhancement threshold slope factor (def.=%g)\n", gb_slp );
@@ -85,8 +85,8 @@ void print_usage( FILE *file ) {
   fprintf( file, " -N              Negate mask images (def.=%s)\n", strbool(gb_negate) );
   fprintf( file, " -a              Save processing mask as alpha channel in output image (def.=%s)\n", strbool(gb_savealph) );
 
-  fprintf( file, " -r small:float  Area limit for small component removal (def.=%g%s^2)\n", gb_small, gb_units );
-  fprintf( file, " -R lengths      Protect faint strokes by 4-directional RLSA: '-', '|', '/' and '\\' (def.=%g,%g,%g,%g %s)\n", gb_rlsa[0], gb_rlsa[1], gb_rlsa[2], gb_rlsa[3], gb_units );
+  fprintf( file, " -r small:float  Area limit for small component removal (def.=%gpx^2|%gmm^2)\n", gb_small_px, gb_small_mm );
+  fprintf( file, " -R lengths      Protect faint strokes by 4-directional RLSA: '-', '|', '/' and '\\' (def.=%g,%g,%g,%gpx|%g,%g,%g,%gmm|)\n", gb_rlsa_px[0], gb_rlsa_px[1], gb_rlsa_px[2], gb_rlsa_px[3], gb_rlsa_mm[0], gb_rlsa_mm[1], gb_rlsa_mm[2], gb_rlsa_mm[3] );
   fprintf( file, "                 lengths are 1 to 4 floats separated by commas\n" );
 
   fprintf( file, " -p              Save images %s_*.png of processing steps (def.=%s)\n", tool, strbool(gb_procimgs) );
@@ -120,6 +120,8 @@ int main( int argc, char *argv[] ) {
   int nopts = optind;
   optind = 1;
 
+  int seen_unit_vals = FALSE;
+
   int n;
   while( ( n = getopt(argc,argv,optstr) ) != -1 )
     switch( n ) {
@@ -128,6 +130,8 @@ int main( int argc, char *argv[] ) {
       if( ! strcmp(optarg,"pixels") )
         die( "error: pixels units disabled to prevent malpractice" );
 #endif
+      if( seen_unit_vals )
+        die( "error: units must be set before any modification of values" );
       if( ! strcmp(optarg,"mm") || ! strcmp(optarg,"pixels") )
         gb_units = optarg;
       else
@@ -150,7 +154,11 @@ int main( int argc, char *argv[] ) {
       }
       break;
     case 'w':
-      gb_winW = atoi(optarg);
+      seen_unit_vals = TRUE;
+      if( ! strcmp(optarg,"mm") )
+        gb_winW_mm = atoi(optarg);
+      else
+        gb_winW_px = atoi(optarg);
       break;
     case 'k':
       gb_prm = atof(optarg);
@@ -195,16 +203,28 @@ int main( int argc, char *argv[] ) {
       gb_savealph = !gb_savealph;
       break;
     case 'r':
-      gb_small = atof(optarg);
+      seen_unit_vals = TRUE;
+      if( ! strcmp(optarg,"mm") )
+        gb_small_mm = atof(optarg);
+      else
+        gb_small_px = atof(optarg);
       break;
     case 'R':
-      if( strchr(optarg,',') == NULL )
-        gb_rlsa[3] = gb_rlsa[2] = gb_rlsa[1] = gb_rlsa[0] = atof(optarg);
+      seen_unit_vals = TRUE;
+      if( strchr(optarg,',') == NULL ) {
+        if( ! strcmp(optarg,"mm") )
+          gb_rlsa_mm[3] = gb_rlsa_mm[2] = gb_rlsa_mm[1] = gb_rlsa_mm[0] = atof(optarg);
+        else
+          gb_rlsa_px[3] = gb_rlsa_px[2] = gb_rlsa_px[1] = gb_rlsa_px[0] = atof(optarg);
+      }
       else {
         char *p = optarg;
         int m = 0;
         do {
-          gb_rlsa[m++] = atof( p );
+          if( ! strcmp(optarg,"mm") )
+            gb_rlsa_mm[m++] = atof( p );
+          else
+            gb_rlsa_px[m++] = atof( p );
           p = strchr(p,',');
           p = p == NULL ? p : p+1 ;
         } while( p != NULL );
@@ -284,11 +304,16 @@ int main( int argc, char *argv[] ) {
     if( img->res_x != img->res_y )
       die( "error: expected image density to be the same for vertical and horizontal" );
     double fact = img->res_x / 10.0;
-    gb_winW *= fact;
+    /*gb_winW *= fact;
     //gb_seR *= fact;
     gb_small *= fact*fact;
     for( n=0; n<4; n++ )
-      gb_rlsa[n] *= fact;
+      gb_rlsa[n] *= fact;*/
+    gb_winW_px = fact*gb_winW_mm;
+    gb_small_px = fact*fact*gb_small_mm;
+    for( n=0; n<4; n++ )
+      gb_rlsa_px[n] = fact*gb_rlsa_mm[n];
+
   }
   //else
   //  logger( 0, "warning: it is discouraged to provide parameters in pixels" );
@@ -483,13 +508,13 @@ int main( int argc, char *argv[] ) {
 
   if( gb_autoprm ) {
     logger( 2, "automatic selection of mfct: %d, %g", gb_autosubsamp, gb_prmthr );
-    if( enhSauvola_sample_prm_graym( gimg, msk, img->width, img->height, &ii1, &ii2, &cnt, gb_winW, gb_slp, &gb_prm, gb_autosubsamp, gb_prmthr ) )
+    if( enhSauvola_sample_prm_graym( gimg, msk, img->width, img->height, &ii1, &ii2, &cnt, gb_winW_px, gb_slp, &gb_prm, gb_autosubsamp, gb_prmthr ) )
       die( "error: unable to select the Sauvola mean threshold automatically" );
   }
 
-  logger( 1, "enhancing by Sauvola: width=%.0fpixels, mfct=%g%s, sfct=%g", gb_winW, gb_prm, gb_autoprm?"(auto)":"", gb_slp );
-  //enhSauvola_graym( gimg, msk, img->width, img->height, &ii1, &ii2, &cnt, gb_winW, gb_prm, gb_slp );
-  enhLocal_graym( gimg, msk, img->width, img->height, &ii1, &ii2, &cnt, gb_winW, gb_prm, gb_slp, gb_enhtype );
+  logger( 1, "enhancing by Sauvola: width=%.0fpixels, mfct=%g%s, sfct=%g", gb_winW_px, gb_prm, gb_autoprm?"(auto)":"", gb_slp );
+  //enhSauvola_graym( gimg, msk, img->width, img->height, &ii1, &ii2, &cnt, gb_winW_px, gb_prm, gb_slp );
+  enhLocal_graym( gimg, msk, img->width, img->height, &ii1, &ii2, &cnt, gb_winW_px, gb_prm, gb_slp, gb_enhtype );
 
   time_end = 1000.0*((double)clock()-time_ini)/((double)CLOCKS_PER_SEC);
   logger( 4, "time: enhancement (ms): %g", time_end );
@@ -508,8 +533,8 @@ int main( int argc, char *argv[] ) {
   }
 
   /// Small component removal ///
-  int minarea = (int)(gb_small+0.5);
-  if( gb_small > 0 && minarea <= 0 )
+  int minarea = (int)(gb_small_px+0.5);
+  if( gb_small_px > 0 && minarea <= 0 )
     logger( 2, "skipping small component removal due to low pixel density" );
   else if( minarea > 0 ) {
     time_ini = clock();
@@ -528,7 +553,7 @@ int main( int argc, char *argv[] ) {
     /// Use RLSA to protect faint strokes ///
     int irlsa[4];
     for( n=0; n<4; n++ )
-      irlsa[n] = gb_rlsa[n] < 0 ? 0 : (int)(gb_rlsa[n]+0.5) ;
+      irlsa[n] = gb_rlsa_px[n] < 0 ? 0 : (int)(gb_rlsa_px[n]+0.5) ;
 
     char rlsa_op = 0;
     rlsa_op = rlsa_op | ( irlsa[0] ? 0x1 : 0 );
@@ -569,7 +594,7 @@ int main( int argc, char *argv[] ) {
     if( objlabel8( bmap, img->width, img->height, objs, &nobjs ) )
       die( "error: problems obtaining connected components" );
 
-    if( nobjs <= 0 ) 
+    if( nobjs <= 0 )
       logger( 2, "warning: encountered an all white image" );
 
     else {
