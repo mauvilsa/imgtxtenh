@@ -2,7 +2,7 @@ cmake_minimum_required( VERSION 2.8.4 )
 project( imgtxtenh )
 set( tool_EXE imgtxtenh )
 include( FindPkgConfig )
-pkg_check_modules( MagickCore REQUIRED MagickCore>=6.8 )
+pkg_check_modules( MagickCore REQUIRED MagickCore>=6.7.7 )
 
 if( MagickCore_VERSION VERSION_GREATER 7.0.0 )
   message( FATAL_ERROR "MagickCore 7 or newer not supported!" )

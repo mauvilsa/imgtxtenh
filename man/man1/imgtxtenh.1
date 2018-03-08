@@ -1,0 +1,67 @@
+.TH "ImgTxtEnh User Manual" 1 "0.0.248" "ImgTxtEn documentation"
+.SH NAME
+imgtxtenh
+.SH DESCRIPTION
+Tool for enhancing noisy scanned text images. The function of 'imgtxtenh' is to clean/enhance noisy scanned text images, which could be printed or handwritten text. It takes as input an image and generates as output another image of the same size. It supports all the input/output image formats that the linked ImageMagick library supports.
+.SH USAGE
+imgtxtenh [options] <in_img> [out_img (def.=png:-)]
+.SH OPTIONS
+.TP
+-u (mm|pixels)
+Units for ALL distance parameters (def.=pixels)
+.TP
+-d density
+Specify the image density in pixels per cm (def.=false)
+.TP
+-t type:string
+Local enhancement type: sauvola, sauvolaSdMax, wilson (def.=sauvola)
+.TP
+-w width:float
+Window width for local enhancement (def.=80px|10mm)
+.TP
+-k mfct:float
+Local enhancement mean threshold factor (def.=0.2)
+.TP
+-s sfct:float
+Local enhancement threshold slope factor (def.=0.5)
+.TP
+-S [r]sat:float
+Contrast stretch [optionally per region] saturating sat% of pixels (def.=false)
+.TP
+-A
+Use input image alpha channel as processing mask (def.=true)
+.TP
+-M mfile
+Read separate processing mask image (def.=false)
+.TP
+-P pfile
+Post-processing mask image (def.=false)
+.TP
+-N
+Negate mask images (def.=false)
+.TP
+-a
+Save processing mask as alpha channel in output image (def.=false)
+.TP
+-r small:float
+Area limit for small component removal (def.=6px^2|0.16mm^2)
+.TP
+-R lengths
+Protect faint strokes by 4-directional RLSA: '-', '|', '/' and '\' (def.=2.4,2.4,2.4,2.4px|0.4,0.4,0.4,0.4mm|) lengths are 1 to 4 floats separated by commas
+.TP
+-p
+Save images imgtxtenh_*.png of processing steps (def.=false)
+.TP
+-l lfile
+logging to 'lfile' (def.=stderr)
+.TP
+-V (-|+|level)
+Set verbosity level (def.=1)
+.TP
+-h
+Print help usage information and exit
+.TP
+-v
+Print version and exit
+.SH SEE ALSO
+imagemagick (1)
