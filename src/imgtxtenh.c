@@ -71,7 +71,7 @@ void print_usage( FILE *file ) {
   fprintf( file, "\n" );
   fprintf( file, " -u (mm|pixels)  Units for ALL distance parameters (def.=%s)\n", gb_units );
   fprintf( file, " -d density      Specify the image density in pixels per cm (def.=%s)\n", strbool(gb_density) );
-  fprintf( file, " -t type:string  Local enhancement type: sauvola, sauvolaSdMax, wilson (def.=sauvola)\n" );
+  fprintf( file, " -t type:string  Local enhancement type: sauvola, sauvolaSdMax, wolf (def.=sauvola)\n" );
   fprintf( file, " -w width:float  Window width for local enhancement (def.=%gpx|%gmm)\n", gb_winW_px, gb_winW_mm );
   fprintf( file, " -k mfct:float   Local enhancement mean threshold factor (def.=%g)\n", gb_prm );
   //fprintf( file, " -K subs,thr     Automatically select mfct, use -K - for default %d,%g (def.=%s)\n", gb_autosubsamp, gb_prmthr, strbool(gb_autoprm) );
