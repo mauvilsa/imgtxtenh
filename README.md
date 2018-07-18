@@ -29,9 +29,6 @@ required to cite the reference [2] below.
 
 The procedure for compiling is:
 
-    cd src
-    mkdir build
-    cd build
     cmake -DCMAKE_BUILD_TYPE=Release ..
     make
 
